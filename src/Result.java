@@ -1,6 +1,7 @@
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,7 +46,7 @@ public abstract class Result<T> {
 	}
 
 	/**
-	 * Binds
+	 * Binds a result to an existing result.
 	 * @param binder
 	 * @param <T1>
 	 * @return
@@ -125,6 +126,34 @@ public abstract class Result<T> {
 					errorHandler.accept(e);
 					return false;
 				}));
+	}
+
+	public static <T, T1> CompletableFuture<Result<T1>> bindAsync(CompletableFuture<Result<T>> future, Function<T, Result<T1>> binder) {
+		return future.thenApply(result -> result.bind(binder));
+	}
+
+	public static <T, T1> CompletableFuture<Result<T1>> mapAsync(CompletableFuture<Result<T>> future, Function<T, T1> mapper) {
+		return future.thenApply(result -> result.map(mapper));
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream,  String errorSeparator) {
+		return CompletableFuture.supplyAsync(()-> Result.aggregate(completableFutureStream.map(CompletableFuture::join), errorSeparator));
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> futureStream) {
+		return Result.aggregateAsync(futureStream, Result.defaultErrorSeparator);
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures,  String errorSeparator) {
+		return Result.aggregateAsync(completableFutures.stream(), errorSeparator);
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures) {
+		return Result.aggregateAsync(completableFutures, Result.defaultErrorSeparator);
+	}
+
+	public static <T> CompletableFuture<Stream<Result<T>>> chooseAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream, Consumer<Result<T>> errorHandler) {
+		return CompletableFuture.supplyAsync(()-> Result.choose(completableFutureStream.map(CompletableFuture::join), errorHandler));
 	}
 
 	public T getValueOrNull() {
