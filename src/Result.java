@@ -128,6 +128,14 @@ public abstract class Result<T> {
 				}));
 	}
 
+	public static <T> CompletableFuture<Void> matchVoidAsync(CompletableFuture<Result<T>> future, Consumer<T> success, Consumer<String> failure) {
+		return future.thenAccept(result-> result.matchVoid(success, failure));
+	}
+
+	public static <T, T1> CompletableFuture<T1> matchAsync(CompletableFuture<Result<T>> future, Function<T, T1>  success, Function<String, T1> failure) {
+		return future.thenApply(result -> result.match(success, failure));
+	}
+
 	public static <T, T1> CompletableFuture<Result<T1>> bindAsync(CompletableFuture<Result<T>> future, Function<T, Result<T1>> binder) {
 		return future.thenApply(result -> result.bind(binder));
 	}
