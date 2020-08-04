@@ -1,12 +1,22 @@
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
+/**
+ * @author David Retzlaff
+ * GitHub: https://github.com/Tyrrx}
+ * Date: 04.08.2020, 13:47
+ */
 
 public class ResultExamples {
 	
 	public static void main(String[] args) {
+
+		var f = CompletableFuture.supplyAsync(()-> "bla");
+
+		f.thenAccept(System.out::println);
 
 		Instant start = Instant.now();
 

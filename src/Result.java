@@ -7,6 +7,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * @author David Retzlaff
+ * GitHub: https://github.com/Tyrrx}
+ * Date: 04.08.2020, 13:47
+ */
+
 public abstract class Result<T> {
 
 	private static final String defaultErrorSeparator = ", ";
@@ -87,10 +93,10 @@ public abstract class Result<T> {
 				.map(tResult ->
 						Result.getValueOrWrapExceptionAndReturnNull(
 								tResult,
-								getValueOrThrowException -> {
+								exceptionWrapper -> {
 									stringBuffer
 											.append(errorSeparator)
-											.append(getValueOrThrowException);
+											.append(exceptionWrapper);
 									return null;}))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
@@ -145,7 +151,7 @@ public abstract class Result<T> {
 	}
 
 	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream,  String errorSeparator) {
-		return CompletableFuture.supplyAsync(()-> Result.aggregate(completableFutureStream.map(CompletableFuture::join), errorSeparator));
+		return CompletableFuture.supplyAsync(() -> Result.aggregate(completableFutureStream.map(CompletableFuture::join), errorSeparator));
 	}
 
 	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> futureStream) {
