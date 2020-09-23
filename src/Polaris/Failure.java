@@ -1,8 +1,11 @@
+package Polaris;
+
 /**
  * @author David Retzlaff
  * GitHub: https://github.com/Tyrrx}
  * Date: 04.08.2020, 13:47
  */
+
 public final class Failure<T> extends Result<T>{
 	private String message;
 	

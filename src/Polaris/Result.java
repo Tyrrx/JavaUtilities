@@ -1,3 +1,5 @@
+package Polaris;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -65,34 +67,38 @@ public abstract class Result<T> {
 	}
 
 	/**
-	 * Maps an existing value to a new Result<T1> with value type T1.
+	 * Maps an existing value to a new Polaris.Result<T1> with value type T1.
 	 * @param mapper Function<T, T1> transforms value on success
 	 * @param <T1> New value type
-	 * @return Result<T1>
+	 * @return Polaris.Result<T1>
 	 */
 	public <T1> Result<T1> map(Function<T, T1> mapper) {
 		return this.bind((value) -> Create.success(mapper.apply(value)));
 	}
 
-	/**
-	 * Aggregates results from a stream to one result with a list of all values.
-	 * @param stream result stream
-	 * @param errorSeparator
-	 * @param <T>
-	 * @return
-	 */
+	public Option<T> toOption() {
+	    return this.match(success -> Option.from(success), failure -> Option.none());
+    }
+
+    /**
+     * Aggregates results from a stream to one result with a list of all values.
+     * @param stream result stream
+     * @param errorSeparator
+     * @param <T>
+     * @return Polaris.Result<List<T>>
+     */
 
 	public static <T> Result<List<T>> aggregate(Stream<Result<T>> stream, String errorSeparator) {
-		var stringBuffer = new StringBuffer();
-		var results = Result.choose(
+        StringBuffer stringBuffer = new StringBuffer();
+        List<T> results = Result.choose(
 				stream,
-				tResult ->
+				result ->
 						stringBuffer
 								.append(errorSeparator)
-								.append(tResult))
-				.map(tResult ->
+								.append(result))
+				.map(result ->
 						Result.getValueOrWrapExceptionAndReturnNull(
-								tResult,
+								result,
 								exceptionWrapper -> {
 									stringBuffer
 											.append(errorSeparator)
@@ -118,18 +124,18 @@ public abstract class Result<T> {
 		return Result.aggregate(results.stream(), errorSeparator);
 	}
 
-	private static <T> T getValueOrWrapExceptionAndReturnNull(Result<T> tResult, Function<GetValueOrThrowException, T> exceptionhandler) {
+	private static <T> T getValueOrWrapExceptionAndReturnNull(Result<T> result, Function<GetValueOrThrowException, T> exceptionHandler) {
 		try {
-			return tResult.getValueOrThrow();
-		} catch (GetValueOrThrowException e) {
-			return exceptionhandler.apply(e);
+			return result.getValueOrThrow();
+		} catch (GetValueOrThrowException getValueOrThrowException) {
+			return exceptionHandler.apply(getValueOrThrowException);
 		}
 	}
 
 	public static <T> Stream<Result<T>> choose(Stream<Result<T>> stream, Consumer<Result<T>> errorHandler)  {
 		return stream
-				.filter(e-> e.match(s -> true, f -> {
-					errorHandler.accept(e);
+				.filter(result -> result.match(success -> true, failure -> {
+					errorHandler.accept(result);
 					return false;
 				}));
 	}
@@ -181,7 +187,7 @@ public abstract class Result<T> {
 		if (this.isSuccess) {
 			return this.toSuccess().getValue();
 		}
-		throw new GetValueOrThrowException("Tried to get a value from a Failure.");
+		throw new GetValueOrThrowException("Tried to get a value from a Polaris.Failure.");
 	}
 
 	public boolean isSuccess() {

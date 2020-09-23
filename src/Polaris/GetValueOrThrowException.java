@@ -1,8 +1,11 @@
+package Polaris;
+
 /**
  * @author David Retzlaff
  * GitHub: https://github.com/Tyrrx}
  * Date: 04.08.2020, 13:47
  */
+
 public class GetValueOrThrowException extends Exception {
 	public GetValueOrThrowException(String message) {
 		super(message);

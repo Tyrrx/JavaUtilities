@@ -1,3 +1,5 @@
+package Polaris;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -14,13 +16,13 @@ public class ResultExamples {
 	
 	public static void main(String[] args) {
 
-		var f = CompletableFuture.supplyAsync(()-> "bla");
+		CompletableFuture f = CompletableFuture.supplyAsync(()-> "bla");
 
 		f.thenAccept(System.out::println);
 
 		Instant start = Instant.now();
 
-		var integerStream = Stream.iterate(0, i -> i+1).limit(999999).map(Create::success);
+		Stream integerStream = Stream.iterate(0, i -> i+1).limit(999999).map(Create::success);
 
 		Result<List<Integer>> res = Result.aggregate(integerStream);
 
