@@ -2,6 +2,7 @@ package Callisto.DependencyInjection;
 
 import Polaris.GetValueOrThrowException;
 import Polaris.Option;
+import Polaris.Result;
 
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -20,9 +21,9 @@ public class ServiceProvider {
         this.serviceDescriptorHashtable = serviceDescriptorHashtable;
     }
 
-    public <T> T getRequiredService(Class<T> serviceClass) throws GetValueOrThrowException {
-        return (T) new ServiceResolver(this.serviceDescriptorHashtable)
-                .resolve(serviceClass)
-                .getValueOrThrow();
+    public <T> Result<T> getRequiredService(Class<T> serviceClass) {
+        return new ServiceResolver(this.serviceDescriptorHashtable)
+            .resolve(serviceClass)
+            .map(service -> (T) service);
     }
 }

@@ -11,7 +11,16 @@ import Callisto.DependencyInjection.Inject;
 public class A implements AI {
 
     public String str = "HI";
+
     @Inject
     public A() {
+    }
+
+    @Inject
+    public A(A a) {
+    }
+
+    public A(String str) {
+        this.str = str;
     }
 }

@@ -2,6 +2,7 @@ package Callisto.Tests;
 
 import Callisto.DependencyInjection.ServiceCollection;
 import Polaris.GetValueOrThrowException;
+import Polaris.Result;
 
 /**
  * @author David Retzlaff
@@ -13,7 +14,12 @@ public class ABTest {
 
     public static void main(String[] args) throws GetValueOrThrowException {
 
-        B b = new ServiceCollection().addTransient(AI.class, A.class).addTransient(B.class).buildServiceProvider().getRequiredService(B.class);
-        b = b;
+        Result<B> bResult = new ServiceCollection()
+            .addTransient(AI.class, A.class)
+            .addTransient(B.class)
+            .buildServiceProvider()
+            .bind(serviceProvider ->
+                serviceProvider.getRequiredService(B.class));
+        bResult = bResult;
     }
 }

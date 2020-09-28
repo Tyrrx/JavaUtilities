@@ -5,6 +5,7 @@ import Polaris.*;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,12 +35,12 @@ public abstract class ServiceDescriptor {
 
     public Result<Constructor<?>> getInjectableConstructor() {
         List<Constructor<?>> constructors = Arrays.stream(serviceClass.getDeclaredConstructors())
-                .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
-        .collect(Collectors.toList());
+            .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
+            .collect(Collectors.toList());
         if (constructors.size() > 1)
-            return Result.failure("Only one constructor with annotation: " + Inject.class.getSimpleName() + " allowed in  in: " + serviceClass.getSimpleName());
+            return Result.failure(String.format("Only one constructor with annotation: '%s' allowed in  in: '%s'", Inject.class.getSimpleName(), serviceClass.getTypeName()));
         if (constructors.size() < 1)
-            return Result.failure("No constructor with annotation: " + Inject.class.getSimpleName() + " provided in " + serviceClass.getSimpleName());
+            return Result.failure(String.format("No constructor with annotation: '%s' provided in: '%s'", Inject.class.getSimpleName(), serviceClass.getTypeName()));
         return Result.success(constructors.get(0));
     }
 
@@ -54,13 +55,14 @@ public abstract class ServiceDescriptor {
 
         public Singleton(Class<?> serviceClass) {
             super(serviceClass, UnionType.Singleton);
-        }}
+        }
+    }
 
-     public static class Transient extends ServiceDescriptor {
-         public Transient(Class<?> serviceClass) {
-             super(serviceClass, UnionType.Transient);
-         }
-     }
+    public static class Transient extends ServiceDescriptor {
+        public Transient(Class<?> serviceClass) {
+            super(serviceClass, UnionType.Transient);
+        }
+    }
 
     public static class InterfaceSingleton extends ServiceDescriptor {
 
@@ -90,11 +92,11 @@ public abstract class ServiceDescriptor {
         }
     }
 
-     public <TReturn> Result<TReturn> match(
-         Function<Singleton, TReturn> singletonFunction,
-         Function<Transient, TReturn> transientFunction,
-         Function<InterfaceSingleton, TReturn> interfaceSingletonFunction,
-         Function<InterfaceTransient, TReturn> interfaceTransientFunction) throws Exception {
+    public <TReturn> Result<TReturn> match(
+        Function<Singleton, TReturn> singletonFunction,
+        Function<Transient, TReturn> transientFunction,
+        Function<InterfaceSingleton, TReturn> interfaceSingletonFunction,
+        Function<InterfaceTransient, TReturn> interfaceTransientFunction) {
         switch (this.getUnionType()) {
             case Singleton:
                 return Result.success(singletonFunction.apply((Singleton) this));
@@ -107,6 +109,38 @@ public abstract class ServiceDescriptor {
             default:
                 return Result.failure(String.format("Missing case in union type %s", this.getClass().getTypeName()));
         }
-     }
+    }
 
+    public Result<Unit> matchVoid(
+        Consumer<Singleton> singletonConsumer,
+        Consumer<Transient> transientConsumer,
+        Consumer<InterfaceSingleton> interfaceSingletonConsumer,
+        Consumer<InterfaceTransient> interfaceTransientConsumer) {
+        return this.match(singleton ->
+        {
+            singletonConsumer.accept(singleton);
+            return No.thing();
+        }, aTransient ->
+        {
+            transientConsumer.accept(aTransient);
+            return No.thing();
+        }, interfaceSingleton ->
+        {
+            interfaceSingletonConsumer.accept(interfaceSingleton);
+            return No.thing();
+        }, interfaceTransient ->
+        {
+            interfaceTransientConsumer.accept(interfaceTransient);
+            return No.thing();
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Result<T> As() {
+        try {
+            return Result.success((T) this);
+        } catch (Exception e) {
+            return Result.failure(e.getMessage());
+        }
+    }
 }

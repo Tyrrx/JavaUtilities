@@ -1,11 +1,10 @@
 package Callisto.DependencyInjection;
 
-import Polaris.Option;
+import Polaris.Result;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author David Retzlaff
@@ -27,24 +26,33 @@ public class ServiceCollection {
         return this;
     }
 
-    public <TInterface,TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.InterfaceSingleton(serviceClass, interfaceClass));
+    public <TInterface, TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
+        registeredServices.add(new ServiceDescriptor.InterfaceSingleton(interfaceClass, serviceClass));
         return this;
     }
 
-    public <TInterface,TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.InterfaceTransient(serviceClass, interfaceClass));
+    public <TInterface, TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
+        registeredServices.add(new ServiceDescriptor.InterfaceTransient(interfaceClass, serviceClass));
         return this;
     }
 
-    public ServiceProvider buildServiceProvider() {
+    public Result<ServiceProvider> buildServiceProvider() {
         Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable = new Hashtable<>();
-        registeredServices.forEach(serviceDescriptor ->
-            serviceDescriptor.getLinkedInterfaceClass().match(
-                some -> serviceDescriptorHashtable.put(some.getTypeName(), serviceDescriptor),
-                () -> {
-                    serviceDescriptorHashtable.put(serviceDescriptor.getServiceClass().getTypeName(), serviceDescriptor);
-                }));
-        return new ServiceProvider(serviceDescriptorHashtable);
+        return Result.aggregate(registeredServices.stream()
+            .map(serviceDescriptor ->
+                serviceDescriptor.matchVoid(
+                    singleton -> serviceDescriptorHashtable.put(singleton.getServiceClass().getTypeName(), singleton),
+                    aTransient -> serviceDescriptorHashtable.put(aTransient.getServiceClass().getTypeName(), aTransient),
+                    interfaceSingleton -> serviceDescriptorHashtable.put(interfaceSingleton.getLinkedInterfaceClass().getTypeName(), interfaceSingleton),
+                    interfaceTransient -> serviceDescriptorHashtable.put(interfaceTransient.getLinkedInterfaceClass().getTypeName(), interfaceTransient))))
+        .map(e -> new ServiceProvider(serviceDescriptorHashtable));
+    }
+
+    private void addInterfaceServiceDescriptor(ServiceDescriptor serviceDescriptor) {
+
+    }
+
+    private void addServiceDescriptor(ServiceDescriptor serviceDescriptor) {
+
     }
 }

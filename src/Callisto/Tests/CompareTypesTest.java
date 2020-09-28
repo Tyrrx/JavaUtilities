@@ -2,6 +2,7 @@ package Callisto.Tests;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 
 /**
  * @author David Retzlaff
@@ -17,9 +18,7 @@ public class CompareTypesTest {
     }
 
     public static void main(String[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        for (Class c : CompareTypesTest.class.getConstructors()[0].getParameterTypes()) {
-            System.out.println(c.getTypeName());
-        }
-
+        Function<String, String> f = (a) -> a;
+        Class<?> a = f.getClass();
     }
 }
