@@ -10,10 +10,10 @@ import Callisto.DependencyInjection.Inject;
 
 public class B {
 
-    public A a;
+    public AI a;
 
     @Inject
-    public B(A a) {
+    public B(AI a) {
         this.a = a;
     }
 }

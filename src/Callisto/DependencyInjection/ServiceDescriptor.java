@@ -38,9 +38,9 @@ public abstract class ServiceDescriptor {
                 .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
         .collect(Collectors.toList());
         if (constructors.size() > 1)
-            return Result.failure("Only one constructor in: " + serviceClass.getSimpleName() + "with annotation: " + Inject.class.getSimpleName() + " allowed!");
+            return Result.failure("Only one constructor with annotation: " + Inject.class.getSimpleName() + " allowed in  in: " + serviceClass.getSimpleName());
         if (constructors.size() < 1)
-            return Result.failure("No constructor with annotation: " + Inject.class.getSimpleName() + " provided!");
+            return Result.failure("No constructor with annotation: " + Inject.class.getSimpleName() + " provided in " + serviceClass.getSimpleName());
         return Result.success(constructors.get(0));
     }
 
@@ -54,6 +54,8 @@ public abstract class ServiceDescriptor {
              super(linkedInterfaceClass, serviceClass);
          }
      }
+
+
 
      public void match(Consumer<Singleton> singletonConsumer, Consumer<Transient> transientConsumer) {
         if (this instanceof Singleton) {

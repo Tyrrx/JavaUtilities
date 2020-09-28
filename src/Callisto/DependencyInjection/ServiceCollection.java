@@ -5,6 +5,7 @@ import Polaris.Option;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author David Retzlaff
@@ -16,25 +17,34 @@ public class ServiceCollection {
 
     private List<ServiceDescriptor> registeredServices = new ArrayList<>();
 
-    public <T> ServiceCollection addSingleton(Class<T> serviceClass) {
+    public <TService> ServiceCollection addSingleton(Class<TService> serviceClass) {
         registeredServices.add(new ServiceDescriptor.Singleton(Option.none(), serviceClass));
         return this;
     }
 
-    public <T> ServiceCollection addTransient(Class<T> serviceClass) {
+    public <TService> ServiceCollection addTransient(Class<TService> serviceClass) {
         registeredServices.add(new ServiceDescriptor.Transient(Option.none(), serviceClass));
+        return this;
+    }
+
+    public <TInterface,TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
+        registeredServices.add(new ServiceDescriptor.Singleton(Option.some(interfaceClass), serviceClass));
+        return this;
+    }
+
+    public <TInterface,TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
+        registeredServices.add(new ServiceDescriptor.Transient(Option.some(interfaceClass), serviceClass));
         return this;
     }
 
     public ServiceProvider buildServiceProvider() {
         Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable = new Hashtable<>();
-        registeredServices.stream().forEach(serviceDescriptor -> {
+        registeredServices.forEach(serviceDescriptor ->
             serviceDescriptor.getLinkedInterfaceClass().match(
-                    some -> serviceDescriptorHashtable.put(some.getTypeName(), serviceDescriptor),
-                    () -> {
-                        serviceDescriptorHashtable.put(serviceDescriptor.getServiceClass().getTypeName(), serviceDescriptor);
-                    });
-        });
+                some -> serviceDescriptorHashtable.put(some.getTypeName(), serviceDescriptor),
+                () -> {
+                    serviceDescriptorHashtable.put(serviceDescriptor.getServiceClass().getTypeName(), serviceDescriptor);
+                }));
         return new ServiceProvider(serviceDescriptorHashtable);
     }
 }

@@ -13,7 +13,7 @@ public class ABTest {
 
     public static void main(String[] args) throws GetValueOrThrowException {
 
-        B a = new ServiceCollection().addTransient(A.class).addTransient(B.class).buildServiceProvider().getRequiredService(B.class);
-        a = a;
+        B b = new ServiceCollection().addTransient(AI.class, A.class).addTransient(B.class).buildServiceProvider().getRequiredService(B.class);
+        b = b;
     }
 }

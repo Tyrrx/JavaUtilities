@@ -33,6 +33,110 @@ public abstract class Result<T> {
         return new Failure<>(message);
     }
 
+    /**
+     * Aggregates results from a stream to one result with a list of all values.
+     * @param stream result stream
+     * @param errorSeparator
+     * @param <T>
+     * @return Polaris.Result<List<T>>
+     */
+
+	public static <T> Result<List<T>> aggregate(Stream<Result<T>> stream, String errorSeparator) {
+        StringBuffer stringBuffer = new StringBuffer();
+        List<T> results = Result.choose(
+            stream,
+            result ->
+                stringBuffer
+                    .append(errorSeparator)
+                    .append(result.toFailure().getMessage()))
+				.map(result -> getValueOrWrapExceptionAndReturnNull(errorSeparator, stringBuffer, result))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		if (stringBuffer.length() > 0) {
+			return Result.failure(stringBuffer.toString().replaceFirst(", ", ""));
+		}
+		return Result.success(results);
+	}
+
+    private static <T> T getValueOrWrapExceptionAndReturnNull(String errorSeparator, StringBuffer stringBuffer, Result<T> result) {
+        return Result.getValueOrWrapExceptionAndReturnNull(
+            result,
+            exceptionWrapper -> {
+                stringBuffer
+                    .append(errorSeparator)
+                    .append(exceptionWrapper);
+                return null;
+            });
+    }
+
+    public static <T> Result<List<T>> aggregate(Stream<Result<T>> results) {
+		return Result.aggregate(results, Result.defaultErrorSeparator);
+	}
+
+	public static <T> Result<List<T>> aggregate(Collection<Result<T>> results) {
+		return Result.aggregate(results.stream(), Result.defaultErrorSeparator);
+	}
+
+	public static <T> Result<List<T>> aggregate(Collection<Result<T>> results, String errorSeparator) {
+		return Result.aggregate(results.stream(), errorSeparator);
+	}
+
+	private static <T> T getValueOrWrapExceptionAndReturnNull(Result<T> result, Function<GetValueOrThrowException, T> exceptionHandler) {
+		try {
+			return result.getValueOrThrow();
+		} catch (GetValueOrThrowException getValueOrThrowException) {
+			return exceptionHandler.apply(getValueOrThrowException);
+		}
+	}
+
+	public static <T> Stream<Result<T>> choose(Stream<Result<T>> stream, Consumer<Result<T>> errorHandler)  {
+		return stream
+				.filter(result -> result.match(success -> true, failure -> {
+					errorHandler.accept(result);
+					return false;
+				}));
+	}
+
+	public static <T> Stream<Result<T>> chooseMessages(Stream<Result<T>> stream, Consumer<String> errorHandler) {
+        return choose(stream, errorResult -> errorHandler.accept(errorResult.toFailure().getMessage()));
+    }
+
+	public static <T> CompletableFuture<Void> matchVoidAsync(CompletableFuture<Result<T>> future, Consumer<T> success, Consumer<String> failure) {
+		return future.thenAccept(result-> result.matchVoid(success, failure));
+	}
+
+	public static <T, T1> CompletableFuture<T1> matchAsync(CompletableFuture<Result<T>> future, Function<T, T1>  success, Function<String, T1> failure) {
+		return future.thenApply(result -> result.match(success, failure));
+	}
+
+	public static <T, T1> CompletableFuture<Result<T1>> bindAsync(CompletableFuture<Result<T>> future, Function<T, Result<T1>> binder) {
+		return future.thenApply(result -> result.bind(binder));
+	}
+
+	public static <T, T1> CompletableFuture<Result<T1>> mapAsync(CompletableFuture<Result<T>> future, Function<T, T1> mapper) {
+		return future.thenApply(result -> result.map(mapper));
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream,  String errorSeparator) {
+		return CompletableFuture.supplyAsync(() -> Result.aggregate(completableFutureStream.map(CompletableFuture::join), errorSeparator));
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> futureStream) {
+		return Result.aggregateAsync(futureStream, Result.defaultErrorSeparator);
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures,  String errorSeparator) {
+		return Result.aggregateAsync(completableFutures.stream(), errorSeparator);
+	}
+
+	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures) {
+		return Result.aggregateAsync(completableFutures, Result.defaultErrorSeparator);
+	}
+
+	public static <T> CompletableFuture<Stream<Result<T>>> chooseAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream, Consumer<Result<T>> errorHandler) {
+		return CompletableFuture.supplyAsync(()-> Result.choose(completableFutureStream.map(CompletableFuture::join), errorHandler));
+	}
+
 	/**
 	 * Matches a result's state (success, failure) without a return value.
 	 * @param success Consumer<T> executed on success
@@ -45,7 +149,6 @@ public abstract class Result<T> {
 			failure.accept(this.toFailure().getMessage());
 		}
 	}
-
 
 	/**
 	 * Matches a result's state (success, failure) and returns a value of type T1.
@@ -88,102 +191,6 @@ public abstract class Result<T> {
 	    return this.match(success -> Option.from(success), failure -> Option.none());
     }
 
-    /**
-     * Aggregates results from a stream to one result with a list of all values.
-     * @param stream result stream
-     * @param errorSeparator
-     * @param <T>
-     * @return Polaris.Result<List<T>>
-     */
-
-	public static <T> Result<List<T>> aggregate(Stream<Result<T>> stream, String errorSeparator) {
-        StringBuffer stringBuffer = new StringBuffer();
-        List<T> results = Result.choose(
-				stream,
-				result ->
-						stringBuffer
-								.append(errorSeparator)
-								.append(result))
-				.map(result ->
-						Result.getValueOrWrapExceptionAndReturnNull(
-								result,
-								exceptionWrapper -> {
-									stringBuffer
-											.append(errorSeparator)
-											.append(exceptionWrapper);
-									return null;}))
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
-		if (stringBuffer.length() > 0) {
-			return Result.failure(stringBuffer.toString());
-		}
-		return Result.success(results);
-	}
-
-	public static <T> Result<List<T>> aggregate(Stream<Result<T>> results) {
-		return Result.aggregate(results, Result.defaultErrorSeparator);
-	}
-
-	public static <T> Result<List<T>> aggregate(Collection<Result<T>> results) {
-		return Result.aggregate(results.stream(), Result.defaultErrorSeparator);
-	}
-
-	public static <T> Result<List<T>> aggregate(Collection<Result<T>> results, String errorSeparator) {
-		return Result.aggregate(results.stream(), errorSeparator);
-	}
-
-	private static <T> T getValueOrWrapExceptionAndReturnNull(Result<T> result, Function<GetValueOrThrowException, T> exceptionHandler) {
-		try {
-			return result.getValueOrThrow();
-		} catch (GetValueOrThrowException getValueOrThrowException) {
-			return exceptionHandler.apply(getValueOrThrowException);
-		}
-	}
-
-	public static <T> Stream<Result<T>> choose(Stream<Result<T>> stream, Consumer<Result<T>> errorHandler)  {
-		return stream
-				.filter(result -> result.match(success -> true, failure -> {
-					errorHandler.accept(result);
-					return false;
-				}));
-	}
-
-	public static <T> CompletableFuture<Void> matchVoidAsync(CompletableFuture<Result<T>> future, Consumer<T> success, Consumer<String> failure) {
-		return future.thenAccept(result-> result.matchVoid(success, failure));
-	}
-
-	public static <T, T1> CompletableFuture<T1> matchAsync(CompletableFuture<Result<T>> future, Function<T, T1>  success, Function<String, T1> failure) {
-		return future.thenApply(result -> result.match(success, failure));
-	}
-
-	public static <T, T1> CompletableFuture<Result<T1>> bindAsync(CompletableFuture<Result<T>> future, Function<T, Result<T1>> binder) {
-		return future.thenApply(result -> result.bind(binder));
-	}
-
-	public static <T, T1> CompletableFuture<Result<T1>> mapAsync(CompletableFuture<Result<T>> future, Function<T, T1> mapper) {
-		return future.thenApply(result -> result.map(mapper));
-	}
-
-	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream,  String errorSeparator) {
-		return CompletableFuture.supplyAsync(() -> Result.aggregate(completableFutureStream.map(CompletableFuture::join), errorSeparator));
-	}
-
-	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Stream<CompletableFuture<Result<T>>> futureStream) {
-		return Result.aggregateAsync(futureStream, Result.defaultErrorSeparator);
-	}
-
-	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures,  String errorSeparator) {
-		return Result.aggregateAsync(completableFutures.stream(), errorSeparator);
-	}
-
-	public static <T> CompletableFuture<Result<List<T>>> aggregateAsync(Collection<CompletableFuture<Result<T>>> completableFutures) {
-		return Result.aggregateAsync(completableFutures, Result.defaultErrorSeparator);
-	}
-
-	public static <T> CompletableFuture<Stream<Result<T>>> chooseAsync(Stream<CompletableFuture<Result<T>>> completableFutureStream, Consumer<Result<T>> errorHandler) {
-		return CompletableFuture.supplyAsync(()-> Result.choose(completableFutureStream.map(CompletableFuture::join), errorHandler));
-	}
-
 	public T getValueOrNull() {
 		if (this.isSuccess()) {
 			return this.toSuccess().getValue();
@@ -192,10 +199,10 @@ public abstract class Result<T> {
 	}
 	
 	public T getValueOrThrow() throws GetValueOrThrowException {
-		if (this.isSuccess) {
-			return this.toSuccess().getValue();
-		}
-		throw new GetValueOrThrowException("Tried to get a value from a Polaris.Failure. Message: " + this.toFailure().getMessage());
+		if (this.isSuccess()) {
+		    return this.toSuccess().getValue();
+        }
+		throw new GetValueOrThrowException(this.toFailure().getMessage());
 	}
 
 	public boolean isSuccess() {

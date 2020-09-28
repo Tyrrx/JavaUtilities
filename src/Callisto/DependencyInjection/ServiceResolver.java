@@ -5,6 +5,7 @@ import Polaris.Result;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -18,17 +19,18 @@ public class ServiceResolver {
 
     private Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable;
 
-    public ServiceResolver( Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable) {
+    public ServiceResolver(Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable) {
         this.serviceDescriptorHashtable = serviceDescriptorHashtable;
     }
 
     public Result<Object> resolve(Class<?> serviceClass) {
         return getServiceDescriptorByClass(serviceClass)
-                .bind(this::resolve);
+            .bind(this::resolve);
     }
 
     private Result<Object> resolve(ServiceDescriptor serviceDescriptor) {
-        return getDependencies(serviceDescriptor).bind(dependencyServiceDescriptors -> {
+        return getDependencies(serviceDescriptor).bind(dependencyServiceDescriptors ->
+        {
             if (dependencyServiceDescriptors.isEmpty()) {
                 return getInstanceWithoutDependencies(serviceDescriptor);
             }
@@ -37,27 +39,28 @@ public class ServiceResolver {
     }
 
     private Result<Object> getInstanceWithoutDependencies(ServiceDescriptor serviceDescriptor) {
-        return serviceDescriptor.getInjectableConstructor().bind(constructor -> {
+        return serviceDescriptor.getInjectableConstructor().bind(constructor ->
+        {
             try {
                 // @todo test if singleton or transient
                 return Result.success(constructor.newInstance());
             } catch (Exception e) {
-                return Result.failure(e.toString());
+                return Result.failure(e.getMessage());
             }
         });
     }
 
     private Result<Object> resolveAndInitialize(ServiceDescriptor serviceDescriptor, List<ServiceDescriptor> serviceDescriptors) {
         return Result.aggregate(serviceDescriptors.stream().map(this::resolve))
-                .bind(resolvedInstances ->
-                        initializeFromServiceDescriptor(serviceDescriptor, resolvedInstances));
+            .bind(resolvedInstances ->
+                initializeFromServiceDescriptor(serviceDescriptor, resolvedInstances));
     }
 
     private Result<Object> initializeFromServiceDescriptor(ServiceDescriptor serviceDescriptor, List<?> resolvedInstances) {
         return serviceDescriptor
-                .getInjectableConstructor()
-                .bind(constructor ->
-                        initializeWithDependencies(resolvedInstances.toArray(), constructor));
+            .getInjectableConstructor()
+            .bind(constructor ->
+                initializeWithDependencies(resolvedInstances.toArray(), constructor));
     }
 
     private Result<Object> initializeWithDependencies(Object[] resolvedInstances, Constructor<?> constructor) {
@@ -65,23 +68,17 @@ public class ServiceResolver {
             // @todo test if singleton or transient
             return Result.success(constructor.newInstance(resolvedInstances));
         } catch (Exception e) {
-            return Result.failure(e.toString());
+            return Result.failure(e.getMessage());
         }
     }
 
     private Result<List<ServiceDescriptor>> getDependencies(ServiceDescriptor serviceDescriptor) {
         return serviceDescriptor.getInjectableConstructor().bind(constructor ->
-                Result.aggregate(Arrays.stream(constructor.getParameterTypes()).map(this::getServiceDescriptorByClass)));
+            Result.aggregate(Arrays.stream(constructor.getParameterTypes()).map(this::getServiceDescriptorByClass)));
     }
 
     private Result<ServiceDescriptor> getServiceDescriptorByClass(Class<?> serviceClass) {
-        return this.getServiceDescriptorByName(serviceClass.getTypeName());
+        return Option.from(this.serviceDescriptorHashtable.getOrDefault(serviceClass.getTypeName(), null))
+            .toResult(() -> String.format("No registered service fond for: %s", serviceClass.getTypeName()));
     }
-
-    private Result<ServiceDescriptor> getServiceDescriptorByName(String name) {
-        return Option.from(this.serviceDescriptorHashtable.getOrDefault(name, null))
-                .toResult(() -> "No service descriptor fond for: " + name);
-    }
-
-
 }
