@@ -22,7 +22,7 @@ public class ResultExamples {
 
 		Instant start = Instant.now();
 
-		Stream integerStream = Stream.iterate(0, i -> i+1).limit(999999).map(Create::success);
+		Stream integerStream = Stream.iterate(0, i -> i+1).limit(999999).map(Result::success);
 
 		Result<List<Integer>> res = Result.aggregate(integerStream);
 

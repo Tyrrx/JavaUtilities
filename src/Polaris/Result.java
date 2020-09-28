@@ -25,6 +25,14 @@ public abstract class Result<T> {
 		this.isSuccess = isSuccess;
 	}
 
+    public static <TResult> Result<TResult> success(TResult value) {
+        return new Success<>(value);
+    }
+
+    public static <TResult> Result<TResult> failure(String message) {
+        return new Failure<>(message);
+    }
+
 	/**
 	 * Matches a result's state (success, failure) without a return value.
 	 * @param success Consumer<T> executed on success
@@ -73,7 +81,7 @@ public abstract class Result<T> {
 	 * @return Polaris.Result<T1>
 	 */
 	public <T1> Result<T1> map(Function<T, T1> mapper) {
-		return this.bind((value) -> Create.success(mapper.apply(value)));
+		return this.bind((value) -> Result.success(mapper.apply(value)));
 	}
 
 	public Option<T> toOption() {
@@ -107,9 +115,9 @@ public abstract class Result<T> {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 		if (stringBuffer.length() > 0) {
-			return Create.failure(stringBuffer.toString());
+			return Result.failure(stringBuffer.toString());
 		}
-		return Create.success(results);
+		return Result.success(results);
 	}
 
 	public static <T> Result<List<T>> aggregate(Stream<Result<T>> results) {
@@ -187,7 +195,7 @@ public abstract class Result<T> {
 		if (this.isSuccess) {
 			return this.toSuccess().getValue();
 		}
-		throw new GetValueOrThrowException("Tried to get a value from a Polaris.Failure.");
+		throw new GetValueOrThrowException("Tried to get a value from a Polaris.Failure. Message: " + this.toFailure().getMessage());
 	}
 
 	public boolean isSuccess() {

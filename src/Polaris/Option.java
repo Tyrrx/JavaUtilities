@@ -50,8 +50,8 @@ public abstract class Option<T> {
 
     public Result<T> toResult(Supplier<String> onNone) {
         return this.match(some -> {
-            return Create.success(some);
-        }, () -> Create.failure(onNone.get()));
+            return Result.success(some);
+        }, () -> Result.failure(onNone.get()));
     }
 
     public static <T1> Option<T1> flatten(Option<Option<T1>> option) {
@@ -68,7 +68,7 @@ public abstract class Option<T> {
 
     public static <T1> Option<T1> from(T1 object) {
         return object != null
-                ? Option.some(object)
+                ? new Some<>(object)
                 : Option.none();
     }
 

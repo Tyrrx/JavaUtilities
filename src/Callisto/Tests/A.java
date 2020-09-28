@@ -1,0 +1,16 @@
+package Callisto.Tests;
+
+import Callisto.DependencyInjection.Inject;
+
+/**
+ * @author David Retzlaff
+ * GitHub: https://github.com/Tyrrx}
+ * Date: 28.09.2020, 11:57
+ */
+
+public class A {
+
+    @Inject
+    public A() {
+    }
+}

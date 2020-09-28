@@ -1,6 +1,5 @@
 package Callisto.DependencyInjection;
 
-import Polaris.Create;
 import Polaris.Result;
 
 /**
@@ -9,14 +8,10 @@ import Polaris.Result;
  * Date: 25.09.2020, 22:07
  */
 
-public class TransientProvider implements ITransientProvider {
+public class TransientProvider implements IServiceInstanceProvider {
 
     @Override
-    public Result<Object> createInstance(String typeName) {
-        try {
-            return Create.success(Class.forName(typeName).getConstructors()[0].newInstance());
-        } catch (Exception e) {
-            return Create.failure(e.toString());
-        }
+    public Result<Object> getInstance() {
+        return null;
     }
 }
