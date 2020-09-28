@@ -18,22 +18,22 @@ public class ServiceCollection {
     private List<ServiceDescriptor> registeredServices = new ArrayList<>();
 
     public <TService> ServiceCollection addSingleton(Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Singleton(Option.none(), serviceClass));
+        registeredServices.add(new ServiceDescriptor.Singleton(serviceClass));
         return this;
     }
 
     public <TService> ServiceCollection addTransient(Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Transient(Option.none(), serviceClass));
+        registeredServices.add(new ServiceDescriptor.Transient(serviceClass));
         return this;
     }
 
     public <TInterface,TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Singleton(Option.some(interfaceClass), serviceClass));
+        registeredServices.add(new ServiceDescriptor.InterfaceSingleton(serviceClass, interfaceClass));
         return this;
     }
 
     public <TInterface,TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Transient(Option.some(interfaceClass), serviceClass));
+        registeredServices.add(new ServiceDescriptor.InterfaceTransient(serviceClass, interfaceClass));
         return this;
     }
 

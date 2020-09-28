@@ -2,11 +2,10 @@ package Callisto.DependencyInjection;
 
 import Polaris.*;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -17,20 +16,20 @@ import java.util.stream.Collectors;
 
 public abstract class ServiceDescriptor {
 
-    private Option<Class<?>> linkedInterfaceClass;
     private Class<?> serviceClass;
+    private UnionType unionType;
 
-    public ServiceDescriptor(Option<Class<?>> linkedInterfaceClass, Class<?> serviceClass) {
-        this.linkedInterfaceClass = linkedInterfaceClass;
+    public ServiceDescriptor(Class<?> serviceClass, UnionType unionType) {
         this.serviceClass = serviceClass;
-    }
-
-    public Option<Class<?>> getLinkedInterfaceClass() {
-        return linkedInterfaceClass;
+        this.unionType = unionType;
     }
 
     public Class<?> getServiceClass() {
         return serviceClass;
+    }
+
+    public UnionType getUnionType() {
+        return unionType;
     }
 
     public Result<Constructor<?>> getInjectableConstructor() {
@@ -44,28 +43,70 @@ public abstract class ServiceDescriptor {
         return Result.success(constructors.get(0));
     }
 
+    private enum UnionType {
+        Singleton,
+        Transient,
+        InterfaceSingleton,
+        InterfaceTransient,
+    }
+
     public static class Singleton extends ServiceDescriptor {
-        public Singleton(Option<Class<?>> linkedInterfaceClass, Class<?> serviceClass) {
-            super(linkedInterfaceClass, serviceClass);
+
+        public Singleton(Class<?> serviceClass) {
+            super(serviceClass, UnionType.Singleton);
         }}
 
      public static class Transient extends ServiceDescriptor {
-         public Transient(Option<Class<?>> linkedInterfaceClass, Class<?> serviceClass) {
-             super(linkedInterfaceClass, serviceClass);
+         public Transient(Class<?> serviceClass) {
+             super(serviceClass, UnionType.Transient);
          }
      }
 
+    public static class InterfaceSingleton extends ServiceDescriptor {
 
+        private Class<?> linkedInterfaceClass;
 
-     public void match(Consumer<Singleton> singletonConsumer, Consumer<Transient> transientConsumer) {
-        if (this instanceof Singleton) {
-            singletonConsumer.accept((Singleton) this);
-        } else if (this instanceof Transient) {
-            transientConsumer.accept((Transient) this);
+        public InterfaceSingleton(Class<?> linkedInterfaceClass, Class<?> serviceClass) {
+            super(serviceClass, UnionType.InterfaceSingleton);
+            this.linkedInterfaceClass = linkedInterfaceClass;
+        }
+
+        public Class<?> getLinkedInterfaceClass() {
+            return linkedInterfaceClass;
+        }
+    }
+
+    public static class InterfaceTransient extends ServiceDescriptor {
+
+        private Class<?> linkedInterfaceClass;
+
+        public InterfaceTransient(Class<?> linkedInterfaceClass, Class<?> serviceClass) {
+            super(serviceClass, UnionType.InterfaceTransient);
+            this.linkedInterfaceClass = linkedInterfaceClass;
+        }
+
+        public Class<?> getLinkedInterfaceClass() {
+            return linkedInterfaceClass;
+        }
+    }
+
+     public <TReturn> Result<TReturn> match(
+         Function<Singleton, TReturn> singletonFunction,
+         Function<Transient, TReturn> transientFunction,
+         Function<InterfaceSingleton, TReturn> interfaceSingletonFunction,
+         Function<InterfaceTransient, TReturn> interfaceTransientFunction) throws Exception {
+        switch (this.getUnionType()) {
+            case Singleton:
+                return Result.success(singletonFunction.apply((Singleton) this));
+            case Transient:
+                return Result.success(transientFunction.apply((Transient) this));
+            case InterfaceSingleton:
+                return Result.success(interfaceSingletonFunction.apply((InterfaceSingleton) this));
+            case InterfaceTransient:
+                return Result.success(interfaceTransientFunction.apply((InterfaceTransient) this));
+            default:
+                return Result.failure(String.format("Missing case in union type %s", this.getClass().getTypeName()));
         }
      }
 
-    public static void main(String[] args) {
-        new Singleton(Option.none(), String.class);
-    }
 }
