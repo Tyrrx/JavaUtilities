@@ -39,6 +39,7 @@ public class ServiceResolver {
     private Result<Object> getInstanceWithoutDependencies(ServiceDescriptor serviceDescriptor) {
         return serviceDescriptor.getInjectableConstructor().bind(constructor -> {
             try {
+                // @todo test if singleton or transient
                 return Result.success(constructor.newInstance());
             } catch (Exception e) {
                 return Result.failure(e.toString());
@@ -61,6 +62,7 @@ public class ServiceResolver {
 
     private Result<Object> initializeWithDependencies(Object[] resolvedInstances, Constructor<?> constructor) {
         try {
+            // @todo test if singleton or transient
             return Result.success(constructor.newInstance(resolvedInstances));
         } catch (Exception e) {
             return Result.failure(e.toString());

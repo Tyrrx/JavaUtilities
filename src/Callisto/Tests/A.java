@@ -10,6 +10,7 @@ import Callisto.DependencyInjection.Inject;
 
 public class A {
 
+    public String str = "HI";
     @Inject
     public A() {
     }

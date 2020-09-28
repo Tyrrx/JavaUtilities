@@ -10,7 +10,7 @@ import Callisto.DependencyInjection.Inject;
 
 public class B {
 
-    private A a;
+    public A a;
 
     @Inject
     public B(A a) {
