@@ -16,10 +16,10 @@ import java.util.List;
 
 public class ServiceResolver {
 
-    private Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable;
+    private Hashtable<String, ServiceDescriptor> serviceDescriptors;
 
-    public ServiceResolver(Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable) {
-        this.serviceDescriptorHashtable = serviceDescriptorHashtable;
+    public ServiceResolver(Hashtable<String, ServiceDescriptor> serviceDescriptors) {
+        this.serviceDescriptors = serviceDescriptors;
     }
 
     public Result<Object> resolve(Class<?> serviceClass) {
@@ -32,6 +32,10 @@ public class ServiceResolver {
             singletonLifetime -> null,
             transientLifetime -> null);
     }
+
+
+
+
 
     private Result<Object> resolve(ServiceDescriptor serviceDescriptor) {
         return getDependencies(serviceDescriptor).bind(dependencyServiceDescriptors ->
@@ -83,7 +87,7 @@ public class ServiceResolver {
     }
 
     private Result<ServiceDescriptor> getServiceDescriptorByClass(Class<?> serviceClass) {
-        return Option.from(this.serviceDescriptorHashtable.getOrDefault(serviceClass.getTypeName(), null))
+        return Option.from(this.serviceDescriptors.getOrDefault(serviceClass.getTypeName(), null))
             .toResult(() -> String.format("No registered service fond for: %s", serviceClass.getTypeName()));
     }
 }

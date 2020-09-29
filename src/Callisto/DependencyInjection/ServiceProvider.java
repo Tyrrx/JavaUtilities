@@ -21,6 +21,7 @@ public class ServiceProvider {
         this.serviceDescriptorHashtable = serviceDescriptorHashtable;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Result<T> getRequiredService(Class<T> serviceClass) {
         return new ServiceResolver(this.serviceDescriptorHashtable)
             .resolve(serviceClass)
