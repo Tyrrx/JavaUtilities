@@ -106,7 +106,7 @@ public abstract class ServiceDescriptor {
         }
     }
 
-    public <TReturn> Result<TReturn> match(
+    public <TReturn> Result<TReturn> matchUnionType(
         Function<InstanceReference, TReturn> singletonFunction,
         Function<InterfaceReference, TReturn> interfaceSingletonFunction) {
         switch (this.getUnionType()) {
@@ -119,10 +119,10 @@ public abstract class ServiceDescriptor {
         }
     }
 
-    public Result<Unit> matchVoid(
+    public Result<Unit> matchVoidUnionType(
         Consumer<InstanceReference> singletonConsumer,
         Consumer<InterfaceReference> interfaceSingletonConsumer) {
-        return this.match(instanceReference ->
+        return this.matchUnionType(instanceReference ->
         {
             singletonConsumer.accept(instanceReference);
             return No.thing();

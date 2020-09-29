@@ -43,12 +43,4 @@ public class ServiceCollection {
         // @todo use method to put serviceDescriptor to check if already present; Aggregate those results and map the service provider
         return Result.success(new ServiceProvider(serviceDescriptorHashtable));
     }
-
-    private void addInterfaceServiceDescriptor(ServiceDescriptor serviceDescriptor) {
-
-    }
-
-    private void addServiceDescriptor(ServiceDescriptor serviceDescriptor) {
-
-    }
 }
