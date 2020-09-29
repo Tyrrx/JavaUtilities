@@ -28,6 +28,14 @@ public class ServiceResolver {
             .bind(this::resolve);
     }
 
+    private Result<Object> resolveFromServiceDescriptor(ServiceDescriptor serviceDescriptor) {
+        serviceDescriptor.match(
+            singleton -> ,
+            aTransient -> ,
+            interfaceSingleton -> ,
+            interfaceTransient -> )
+    }
+
     private Result<Object> resolve(ServiceDescriptor serviceDescriptor) {
         return getDependencies(serviceDescriptor).bind(dependencyServiceDescriptors ->
         {
