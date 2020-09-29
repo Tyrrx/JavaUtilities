@@ -93,6 +93,19 @@ public abstract class ServiceDescriptor {
         }
     }
 
+    public <TReturn> Result<TReturn> matchLifetimeType(
+        Function<ServiceDescriptor, TReturn> singletonLifetime,
+        Function<ServiceDescriptor, TReturn> transientLifetime) {
+        switch (this.getScopeLifetime()) {
+            case Singleton:
+                return Result.success(singletonLifetime.apply(this));
+            case Transient:
+                return Result.success(transientLifetime.apply(this));
+            default:
+                return Result.failure(String.format("Missing case in matchLifetimeType for: '%s'", this.getScopeLifetime()));
+        }
+    }
+
     public <TReturn> Result<TReturn> match(
         Function<InstanceReference, TReturn> singletonFunction,
         Function<InterfaceReference, TReturn> interfaceSingletonFunction) {
