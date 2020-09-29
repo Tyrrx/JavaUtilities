@@ -19,10 +19,12 @@ public abstract class ServiceDescriptor {
 
     private Class<?> serviceClass;
     private UnionType unionType;
+    private ScopeLifetime scopeLifetime;
 
-    public ServiceDescriptor(Class<?> serviceClass, UnionType unionType) {
+    public ServiceDescriptor(Class<?> serviceClass, UnionType unionType, ScopeLifetime scopeLifetime) {
         this.serviceClass = serviceClass;
         this.unionType = unionType;
+        this.scopeLifetime = scopeLifetime;
     }
 
     public Class<?> getServiceClass() {
@@ -32,6 +34,12 @@ public abstract class ServiceDescriptor {
     public UnionType getUnionType() {
         return unionType;
     }
+
+    public ScopeLifetime getScopeLifetime() {
+        return scopeLifetime;
+    }
+
+    public abstract Class<?> getLinkerClass();
 
     public Result<Constructor<?>> getInjectableConstructor() {
         List<Constructor<?>> constructors = Arrays.stream(serviceClass.getDeclaredConstructors())
@@ -45,92 +53,69 @@ public abstract class ServiceDescriptor {
     }
 
     private enum UnionType {
+        InstanceReference,
+        InterfaceReference,
+    }
+
+    public enum ScopeLifetime {
         Singleton,
         Transient,
-        InterfaceSingleton,
-        InterfaceTransient,
     }
 
-    public static class Singleton extends ServiceDescriptor {
+    public static class InstanceReference extends ServiceDescriptor {
 
-        public Singleton(Class<?> serviceClass) {
-            super(serviceClass, UnionType.Singleton);
+        public InstanceReference(Class<?> serviceClass, ScopeLifetime scopeLifetime) {
+            super(serviceClass, UnionType.InstanceReference, scopeLifetime);
+        }
+
+        @Override
+        public Class<?> getLinkerClass() {
+            return getServiceClass();
         }
     }
 
-    public static class Transient extends ServiceDescriptor {
-        public Transient(Class<?> serviceClass) {
-            super(serviceClass, UnionType.Transient);
-        }
-    }
-
-    public static class InterfaceSingleton extends ServiceDescriptor {
+    public static class InterfaceReference extends ServiceDescriptor {
 
         private Class<?> linkedInterfaceClass;
 
-        public InterfaceSingleton(Class<?> linkedInterfaceClass, Class<?> serviceClass) {
-            super(serviceClass, UnionType.InterfaceSingleton);
+        public InterfaceReference(Class<?> linkedInterfaceClass, Class<?> serviceClass, ScopeLifetime scopeLifetime) {
+            super(serviceClass, UnionType.InterfaceReference, scopeLifetime);
             this.linkedInterfaceClass = linkedInterfaceClass;
         }
 
         public Class<?> getLinkedInterfaceClass() {
             return linkedInterfaceClass;
         }
-    }
 
-    public static class InterfaceTransient extends ServiceDescriptor {
-
-        private Class<?> linkedInterfaceClass;
-
-        public InterfaceTransient(Class<?> linkedInterfaceClass, Class<?> serviceClass) {
-            super(serviceClass, UnionType.InterfaceTransient);
-            this.linkedInterfaceClass = linkedInterfaceClass;
-        }
-
-        public Class<?> getLinkedInterfaceClass() {
-            return linkedInterfaceClass;
+        @Override
+        public Class<?> getLinkerClass() {
+            return getLinkedInterfaceClass();
         }
     }
 
     public <TReturn> Result<TReturn> match(
-        Function<Singleton, TReturn> singletonFunction,
-        Function<Transient, TReturn> transientFunction,
-        Function<InterfaceSingleton, TReturn> interfaceSingletonFunction,
-        Function<InterfaceTransient, TReturn> interfaceTransientFunction) {
+        Function<InstanceReference, TReturn> singletonFunction,
+        Function<InterfaceReference, TReturn> interfaceSingletonFunction) {
         switch (this.getUnionType()) {
-            case Singleton:
-                return Result.success(singletonFunction.apply((Singleton) this));
-            case Transient:
-                return Result.success(transientFunction.apply((Transient) this));
-            case InterfaceSingleton:
-                return Result.success(interfaceSingletonFunction.apply((InterfaceSingleton) this));
-            case InterfaceTransient:
-                return Result.success(interfaceTransientFunction.apply((InterfaceTransient) this));
+            case InstanceReference:
+                return Result.success(singletonFunction.apply((InstanceReference) this));
+            case InterfaceReference:
+                return Result.success(interfaceSingletonFunction.apply((InterfaceReference) this));
             default:
                 return Result.failure(String.format("Missing case in union type %s", this.getClass().getTypeName()));
         }
     }
 
     public Result<Unit> matchVoid(
-        Consumer<Singleton> singletonConsumer,
-        Consumer<Transient> transientConsumer,
-        Consumer<InterfaceSingleton> interfaceSingletonConsumer,
-        Consumer<InterfaceTransient> interfaceTransientConsumer) {
-        return this.match(singleton ->
+        Consumer<InstanceReference> singletonConsumer,
+        Consumer<InterfaceReference> interfaceSingletonConsumer) {
+        return this.match(instanceReference ->
         {
-            singletonConsumer.accept(singleton);
+            singletonConsumer.accept(instanceReference);
             return No.thing();
-        }, aTransient ->
+        }, interfaceReference ->
         {
-            transientConsumer.accept(aTransient);
-            return No.thing();
-        }, interfaceSingleton ->
-        {
-            interfaceSingletonConsumer.accept(interfaceSingleton);
-            return No.thing();
-        }, interfaceTransient ->
-        {
-            interfaceTransientConsumer.accept(interfaceTransient);
+            interfaceSingletonConsumer.accept(interfaceReference);
             return No.thing();
         });
     }

@@ -30,10 +30,9 @@ public class ServiceResolver {
 
     private Result<Object> resolveFromServiceDescriptor(ServiceDescriptor serviceDescriptor) {
         serviceDescriptor.match(
-            singleton -> ,
-            aTransient -> ,
-            interfaceSingleton -> ,
-            interfaceTransient -> )
+            instanceReference -> ,
+            interfaceReference ->
+            );
     }
 
     private Result<Object> resolve(ServiceDescriptor serviceDescriptor) {

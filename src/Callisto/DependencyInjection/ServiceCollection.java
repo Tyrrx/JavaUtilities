@@ -17,35 +17,31 @@ public class ServiceCollection {
     private List<ServiceDescriptor> registeredServices = new ArrayList<>();
 
     public <TService> ServiceCollection addSingleton(Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Singleton(serviceClass));
+        registeredServices.add(new ServiceDescriptor.InstanceReference(serviceClass, ServiceDescriptor.ScopeLifetime.Singleton));
         return this;
     }
 
     public <TService> ServiceCollection addTransient(Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.Transient(serviceClass));
+        registeredServices.add(new ServiceDescriptor.InstanceReference(serviceClass, ServiceDescriptor.ScopeLifetime.Transient));
         return this;
     }
 
     public <TInterface, TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.InterfaceSingleton(interfaceClass, serviceClass));
+        registeredServices.add(new ServiceDescriptor.InterfaceReference(interfaceClass, serviceClass, ServiceDescriptor.ScopeLifetime.Singleton));
         return this;
     }
 
     public <TInterface, TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
-        registeredServices.add(new ServiceDescriptor.InterfaceTransient(interfaceClass, serviceClass));
+        registeredServices.add(new ServiceDescriptor.InterfaceReference(interfaceClass, serviceClass, ServiceDescriptor.ScopeLifetime.Transient));
         return this;
     }
 
     public Result<ServiceProvider> buildServiceProvider() {
         Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable = new Hashtable<>();
-        return Result.aggregate(registeredServices.stream()
-            .map(serviceDescriptor ->
-                serviceDescriptor.matchVoid(
-                    singleton -> serviceDescriptorHashtable.put(singleton.getServiceClass().getTypeName(), singleton),
-                    aTransient -> serviceDescriptorHashtable.put(aTransient.getServiceClass().getTypeName(), aTransient),
-                    interfaceSingleton -> serviceDescriptorHashtable.put(interfaceSingleton.getLinkedInterfaceClass().getTypeName(), interfaceSingleton),
-                    interfaceTransient -> serviceDescriptorHashtable.put(interfaceTransient.getLinkedInterfaceClass().getTypeName(), interfaceTransient))))
-        .map(e -> new ServiceProvider(serviceDescriptorHashtable));
+        registeredServices
+            .forEach(serviceDescriptor -> serviceDescriptorHashtable.put(serviceDescriptor.getLinkerClass().getTypeName(), serviceDescriptor));
+        // @todo use method to put serviceDescriptor to check if already present; Aggregate those results and map the service provider
+        return Result.success(new ServiceProvider(serviceDescriptorHashtable));
     }
 
     private void addInterfaceServiceDescriptor(ServiceDescriptor serviceDescriptor) {

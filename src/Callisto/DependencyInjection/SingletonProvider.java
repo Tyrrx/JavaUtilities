@@ -10,6 +10,6 @@ import Polaris.Result;
 
 public class SingletonProvider {
     public Result<Object> getOrCreateInstance(Class<?> singletonClass) {
-
+        return null;
     }
 }
