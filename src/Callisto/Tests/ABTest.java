@@ -16,7 +16,6 @@ public class ABTest {
 
         Result<B> bResult = new ServiceCollection()
             .addTransient(AI.class, A.class)
-            .addTransient(AI.class, B.class)
             .addTransient(B.class)
             .buildServiceProvider()
             .bind(serviceProvider ->

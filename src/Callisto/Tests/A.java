@@ -8,7 +8,7 @@ import Callisto.DependencyInjection.Inject;
  * Date: 28.09.2020, 11:57
  */
 
-public class A implements AI {
+public abstract class A implements AI {
 
     public String str = "HI";
 
