@@ -5,7 +5,6 @@ import Polaris.Result;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -29,10 +28,9 @@ public class ServiceResolver {
     }
 
     private Result<Object> resolveFromServiceDescriptor(ServiceDescriptor serviceDescriptor) {
-        serviceDescriptor.match(
-            instanceReference -> ,
-            interfaceReference ->
-            );
+        return serviceDescriptor.matchLifetimeDescriptor(
+            singletonLifetime -> null,
+            transientLifetime -> null);
     }
 
     private Result<Object> resolve(ServiceDescriptor serviceDescriptor) {

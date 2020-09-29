@@ -19,12 +19,12 @@ public abstract class ServiceDescriptor {
 
     private Class<?> serviceClass;
     private UnionType unionType;
-    private ScopeLifetime scopeLifetime;
+    private LifetimeDescriptor lifetimeDescriptor;
 
-    public ServiceDescriptor(Class<?> serviceClass, UnionType unionType, ScopeLifetime scopeLifetime) {
+    public ServiceDescriptor(Class<?> serviceClass, UnionType unionType, LifetimeDescriptor lifetimeDescriptor) {
         this.serviceClass = serviceClass;
         this.unionType = unionType;
-        this.scopeLifetime = scopeLifetime;
+        this.lifetimeDescriptor = lifetimeDescriptor;
     }
 
     public Class<?> getServiceClass() {
@@ -35,8 +35,8 @@ public abstract class ServiceDescriptor {
         return unionType;
     }
 
-    public ScopeLifetime getScopeLifetime() {
-        return scopeLifetime;
+    public LifetimeDescriptor getLifetimeDescriptor() {
+        return lifetimeDescriptor;
     }
 
     public abstract Class<?> getLinkerClass();
@@ -57,15 +57,15 @@ public abstract class ServiceDescriptor {
         InterfaceReference,
     }
 
-    public enum ScopeLifetime {
+    public enum LifetimeDescriptor {
         Singleton,
         Transient,
     }
 
     public static class InstanceReference extends ServiceDescriptor {
 
-        public InstanceReference(Class<?> serviceClass, ScopeLifetime scopeLifetime) {
-            super(serviceClass, UnionType.InstanceReference, scopeLifetime);
+        public InstanceReference(Class<?> serviceClass, LifetimeDescriptor lifetimeDescriptor) {
+            super(serviceClass, UnionType.InstanceReference, lifetimeDescriptor);
         }
 
         @Override
@@ -78,8 +78,8 @@ public abstract class ServiceDescriptor {
 
         private Class<?> linkedInterfaceClass;
 
-        public InterfaceReference(Class<?> linkedInterfaceClass, Class<?> serviceClass, ScopeLifetime scopeLifetime) {
-            super(serviceClass, UnionType.InterfaceReference, scopeLifetime);
+        public InterfaceReference(Class<?> linkedInterfaceClass, Class<?> serviceClass, LifetimeDescriptor lifetimeDescriptor) {
+            super(serviceClass, UnionType.InterfaceReference, lifetimeDescriptor);
             this.linkedInterfaceClass = linkedInterfaceClass;
         }
 
@@ -93,16 +93,16 @@ public abstract class ServiceDescriptor {
         }
     }
 
-    public <TReturn> Result<TReturn> matchLifetimeType(
+    public <TReturn> Result<TReturn> matchLifetimeDescriptor(
         Function<ServiceDescriptor, TReturn> singletonLifetime,
         Function<ServiceDescriptor, TReturn> transientLifetime) {
-        switch (this.getScopeLifetime()) {
+        switch (this.getLifetimeDescriptor()) {
             case Singleton:
                 return Result.success(singletonLifetime.apply(this));
             case Transient:
                 return Result.success(transientLifetime.apply(this));
             default:
-                return Result.failure(String.format("Missing case in matchLifetimeType for: '%s'", this.getScopeLifetime()));
+                return Result.failure(String.format("Missing case in matchLifetimeType for: '%s'", this.getLifetimeDescriptor()));
         }
     }
 
