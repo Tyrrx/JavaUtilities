@@ -16,10 +16,6 @@ public class A implements AI {
     public A() {
     }
 
-    @Inject
-    public A(A a) {
-    }
-
     public A(String str) {
         this.str = str;
     }
