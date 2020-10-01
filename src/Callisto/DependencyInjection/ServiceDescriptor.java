@@ -41,6 +41,8 @@ public abstract class ServiceDescriptor {
 
     public abstract Class<?> getLinkerClass();
 
+    public abstract String getLinkerTypeName();
+
     public Result<Constructor<?>> getInjectableConstructor() {
         List<Constructor<?>> constructors = Arrays.stream(serviceClass.getDeclaredConstructors())
             .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
@@ -72,6 +74,11 @@ public abstract class ServiceDescriptor {
         public Class<?> getLinkerClass() {
             return getServiceClass();
         }
+
+        @Override
+        public String getLinkerTypeName() {
+            return this.getLinkerClass().getTypeName();
+        }
     }
 
     public static class InterfaceReference extends ServiceDescriptor {
@@ -91,38 +98,43 @@ public abstract class ServiceDescriptor {
         public Class<?> getLinkerClass() {
             return getLinkedInterfaceClass();
         }
+
+        @Override
+        public String getLinkerTypeName() {
+            return getLinkerClass().getTypeName();
+        }
     }
 
-    public <TReturn> Result<TReturn> matchLifetimeDescriptor(
+    public <TReturn> TReturn matchLifetimeDescriptor(
         Function<ServiceDescriptor, TReturn> singletonLifetime,
         Function<ServiceDescriptor, TReturn> transientLifetime) {
         switch (this.getLifetimeDescriptor()) {
             case Singleton:
-                return Result.success(singletonLifetime.apply(this));
+                return singletonLifetime.apply(this);
             case Transient:
-                return Result.success(transientLifetime.apply(this));
+                return transientLifetime.apply(this);
             default:
-                return Result.failure(String.format("Missing case in matchLifetimeType for: '%s'", this.getLifetimeDescriptor()));
+                throw new IllegalStateException(String.format("Missing case in matchLifetimeType for: '%s'", this.getLifetimeDescriptor()));
         }
     }
 
-    public <TReturn> Result<TReturn> matchUnionType(
+    public <TReturn> TReturn matchUnionType(
         Function<InstanceReference, TReturn> singletonFunction,
         Function<InterfaceReference, TReturn> interfaceSingletonFunction) {
         switch (this.getUnionType()) {
             case InstanceReference:
-                return Result.success(singletonFunction.apply((InstanceReference) this));
+                return singletonFunction.apply((InstanceReference) this);
             case InterfaceReference:
-                return Result.success(interfaceSingletonFunction.apply((InterfaceReference) this));
+                return interfaceSingletonFunction.apply((InterfaceReference) this);
             default:
-                return Result.failure(String.format("Missing case in union type %s", this.getClass().getTypeName()));
+                throw new IllegalStateException(String.format("Missing case in union type %s", this.getClass().getTypeName()));
         }
     }
 
-    public Result<Unit> matchVoidUnionType(
+    public void matchVoidUnionType(
         Consumer<InstanceReference> singletonConsumer,
         Consumer<InterfaceReference> interfaceSingletonConsumer) {
-        return this.matchUnionType(instanceReference ->
+        this.matchUnionType(instanceReference ->
         {
             singletonConsumer.accept(instanceReference);
             return No.thing();
@@ -133,8 +145,9 @@ public abstract class ServiceDescriptor {
         });
     }
 
+
     @SuppressWarnings("unchecked")
-    public <T> Result<T> As() {
+    public <T> Result<T> as() {
         try {
             return Result.success((T) this);
         } catch (Exception e) {
