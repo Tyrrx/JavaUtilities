@@ -17,7 +17,7 @@ public abstract class Option<T> {
         this.isSome = isSome;
     }
 
-    public void match(Consumer<T> some, Runnable none) {
+    public void matchVoid(Consumer<T> some, Runnable none) {
         if (this.isSome()) {
             some.accept(this.toSome().getValue());
         } else {
@@ -52,6 +52,17 @@ public abstract class Option<T> {
         return this.match(some -> {
             return Result.success(some);
         }, () -> Result.failure(onNone.get()));
+    }
+
+    public T getValueOrThrow() throws GetValueOrThrowException {
+        if (this.isSome()) {
+            return this.toSome().getValue();
+        }
+        throw new GetValueOrThrowException(String.format("cannot get value from '%s'", this.getClass().getTypeName()));
+    }
+
+    public T getValueOrDefault(T defaultValue) {
+        return this.match(some -> some, () -> defaultValue);
     }
 
     public static <T1> Option<T1> flatten(Option<Option<T1>> option) {
