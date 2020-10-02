@@ -1,10 +1,14 @@
 package Callisto.DependencyInjection;
 
-import Polaris.*;
+import Polaris.GetErrorOrThrowException;
+import Polaris.GetValueOrThrowException;
+import Polaris.No;
+import Polaris.Result;
+import Polaris.Unit;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +20,7 @@ import java.util.Optional;
 
 public class ServiceCollection {
 
-    private List<ServiceDescriptor> preRegisteredServices = new ArrayList<>();
+    private List<ServiceDescriptor> preRegisteredServices = new LinkedList<>();
 
     /**
      * Registers a service as singleton. The service will be initialized just once.
