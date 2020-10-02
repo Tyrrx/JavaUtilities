@@ -1,12 +1,16 @@
 package Callisto.DependencyInjection;
 
+import Polaris.GetErrorOrThrowException;
 import Polaris.GetValueOrThrowException;
 import Polaris.Option;
 import Polaris.Result;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -15,7 +19,7 @@ import java.util.stream.Collectors;
  * Date: 25.09.2020, 22:13
  */
 
-public class ServiceProvider {
+public class ServiceProvider implements IServiceProvider{
 
     private Hashtable<String, ServiceDescriptor> serviceDescriptors;
     private Hashtable<String, Object> singletonRepository;
@@ -32,6 +36,17 @@ public class ServiceProvider {
         return getServiceDescriptorByClass(serviceClass)
             .bind(this::resolveFromServiceDescriptor)
             .bind(this::cast);
+    }
+
+    public <T> T getRequiredServiceOrThrow(Class<T> serviceClass) throws GetValueOrThrowException, GetErrorOrThrowException, GetRequiredServiceOrThrowException {
+        resolvedServiceDescriptors.clear();
+        Result<T> serviceResult = this.getServiceDescriptorByClass(serviceClass)
+            .bind(this::resolveFromServiceDescriptor)
+            .bind(this::cast);
+        if (serviceResult.isSuccess()) {
+            return serviceResult.getValueOrThrow();
+        }
+        throw new GetRequiredServiceOrThrowException(serviceResult.getErrorOrThrow());
     }
 
     @SuppressWarnings("unchecked")
@@ -104,7 +119,7 @@ public class ServiceProvider {
             });
     }
 
-    public Result<Option<List<ServiceDescriptor>>> assertHasDependencies(ServiceDescriptor serviceDescriptor) {
+    private Result<Option<List<ServiceDescriptor>>> assertHasDependencies(ServiceDescriptor serviceDescriptor) {
         return serviceDescriptor
             .getInjectableConstructor()
             .bind(constructor -> {

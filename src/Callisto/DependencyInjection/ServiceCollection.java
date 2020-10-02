@@ -18,7 +18,7 @@ import java.util.Optional;
  * Date: 25.09.2020, 22:16
  */
 
-public class ServiceCollection {
+public class ServiceCollection implements IServiceCollection{
 
     private List<ServiceDescriptor> preRegisteredServices = new LinkedList<>();
 
