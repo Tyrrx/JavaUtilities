@@ -6,9 +6,8 @@ import Polaris.Result;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author David Retzlaff
@@ -20,13 +19,16 @@ public class ServiceProvider {
 
     private Hashtable<String, ServiceDescriptor> serviceDescriptors;
     private Hashtable<String, Object> singletonRepository;
+    private LinkedHashSet<ServiceDescriptor> resolvedServiceDescriptors;
 
     public ServiceProvider(Hashtable<String, ServiceDescriptor> serviceDescriptorHashtable) {
         this.serviceDescriptors = serviceDescriptorHashtable;
         this.singletonRepository = new Hashtable<>();
+        this.resolvedServiceDescriptors = new LinkedHashSet<>();
     }
 
     public <T> Result<T> getRequiredService(Class<T> serviceClass) {
+        resolvedServiceDescriptors.clear();
         return getServiceDescriptorByClass(serviceClass)
             .bind(this::resolveFromServiceDescriptor)
             .bind(this::cast);
@@ -42,9 +44,28 @@ public class ServiceProvider {
     }
 
     private Result<Object> resolveFromServiceDescriptor(ServiceDescriptor serviceDescriptor) {
+        if (!resolvedServiceDescriptors.add(serviceDescriptor)) {
+            return createCircularDependencyError(serviceDescriptor);
+        }
         return serviceDescriptor.matchLifetimeDescriptor(
             this::resolveSingleton,
             this::resolveAndInitialize);
+    }
+
+    private Result<Object> createCircularDependencyError(ServiceDescriptor serviceDescriptor) {
+        String circleMessage = resolvedServiceDescriptors.stream()
+            .dropWhile(s ->
+                !s.equals(serviceDescriptor))
+            .map(s ->
+                String.format("'%s' -> '%s'",
+                    s.getLinkerTypeName(),
+                    s.getServiceClass().getTypeName()))
+            .collect(Collectors.joining(" => "));
+        return Result.failure(String.format("%s: Circular dependency at: %s => '%s' -> '%s'",
+            ServiceProvider.class.getSimpleName(),
+            circleMessage,
+            serviceDescriptor.getLinkerTypeName(),
+            serviceDescriptor.getServiceClass().getTypeName()));
     }
 
     private Result<Object> resolveSingleton(ServiceDescriptor singletonServiceDescriptor) {
