@@ -1,4 +1,4 @@
-package Callisto.DependencyInjection;
+package Callisto.DependencyInjection.Domain;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
