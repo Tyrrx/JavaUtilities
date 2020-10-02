@@ -1,14 +1,14 @@
-package Callisto.DependencyInjection.Application;
+package callisto.dependencyInjection.application;
 
-import Callisto.DependencyInjection.Domain.BuildServiceCollectionException;
-import Callisto.DependencyInjection.Domain.IServiceCollection;
-import Callisto.DependencyInjection.Domain.IServiceProvider;
-import Callisto.DependencyInjection.Domain.ServiceDescriptor;
-import Polaris.GetErrorOrThrowException;
-import Polaris.GetValueOrThrowException;
-import Polaris.No;
-import Polaris.Result;
-import Polaris.Unit;
+import callisto.dependencyInjection.domain.BuildServiceCollectionException;
+import callisto.dependencyInjection.domain.IServiceCollection;
+import callisto.dependencyInjection.domain.IServiceProvider;
+import callisto.dependencyInjection.domain.ServiceDescriptor;
+import polaris.GetErrorOrThrowException;
+import polaris.GetValueOrThrowException;
+import polaris.No;
+import polaris.Result;
+import polaris.Unit;
 
 import java.lang.reflect.Modifier;
 import java.util.Hashtable;

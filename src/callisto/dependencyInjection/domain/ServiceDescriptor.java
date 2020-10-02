@@ -1,6 +1,6 @@
-package Callisto.DependencyInjection.Domain;
+package callisto.dependencyInjection.domain;
 
-import Polaris.*;
+import polaris.*;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package Polaris;
+package polaris;
 
 import java.time.Duration;
 import java.time.Instant;

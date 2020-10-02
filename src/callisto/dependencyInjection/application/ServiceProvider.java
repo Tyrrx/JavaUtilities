@@ -1,12 +1,12 @@
-package Callisto.DependencyInjection.Application;
+package callisto.dependencyInjection.application;
 
-import Callisto.DependencyInjection.Domain.GetRequiredServiceOrThrowException;
-import Callisto.DependencyInjection.Domain.IServiceProvider;
-import Callisto.DependencyInjection.Domain.ServiceDescriptor;
-import Polaris.GetErrorOrThrowException;
-import Polaris.GetValueOrThrowException;
-import Polaris.Option;
-import Polaris.Result;
+import callisto.dependencyInjection.domain.GetRequiredServiceOrThrowException;
+import callisto.dependencyInjection.domain.IServiceProvider;
+import callisto.dependencyInjection.domain.ServiceDescriptor;
+import polaris.GetErrorOrThrowException;
+import polaris.GetValueOrThrowException;
+import polaris.Option;
+import polaris.Result;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

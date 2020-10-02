@@ -1,8 +1,8 @@
-package Callisto.DependencyInjection.Domain;
+package callisto.dependencyInjection.domain;
 
-import Polaris.GetErrorOrThrowException;
-import Polaris.GetValueOrThrowException;
-import Polaris.Result;
+import polaris.GetErrorOrThrowException;
+import polaris.GetValueOrThrowException;
+import polaris.Result;
 
 /**
  * @author David Retzlaff

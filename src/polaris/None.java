@@ -1,4 +1,4 @@
-package Polaris;
+package polaris;
 
 /**
  * @author David Retzlaff
