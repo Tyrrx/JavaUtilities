@@ -1,5 +1,9 @@
-package Callisto.DependencyInjection;
+package Callisto.DependencyInjection.Application;
 
+import Callisto.DependencyInjection.Domain.BuildServiceCollectionException;
+import Callisto.DependencyInjection.Domain.IServiceCollection;
+import Callisto.DependencyInjection.Domain.IServiceProvider;
+import Callisto.DependencyInjection.Domain.ServiceDescriptor;
 import Polaris.GetErrorOrThrowException;
 import Polaris.GetValueOrThrowException;
 import Polaris.No;
@@ -18,7 +22,7 @@ import java.util.Optional;
  * Date: 25.09.2020, 22:16
  */
 
-public class ServiceCollection implements IServiceCollection{
+public class ServiceCollection implements IServiceCollection {
 
     private List<ServiceDescriptor> preRegisteredServices = new LinkedList<>();
 
@@ -68,7 +72,7 @@ public class ServiceCollection implements IServiceCollection{
      * Creates a ServiceProvider from the registered services.
      * @return Result<ServiceProvider>
      */
-    public Result<ServiceProvider> buildServiceProvider() {
+    public Result<IServiceProvider> buildServiceProvider() {
         Hashtable<String, ServiceDescriptor> serviceDescriptorRegistry = new Hashtable<>();
         return this.validatePreRegisteredServices()
             .bind(validatedRegisteredServices ->
@@ -85,8 +89,8 @@ public class ServiceCollection implements IServiceCollection{
      * @throws GetValueOrThrowException
      * @throws GetErrorOrThrowException
      */
-    public ServiceProvider buildServiceProviderOrThrow() throws BuildServiceCollectionException, GetValueOrThrowException, GetErrorOrThrowException {
-        Result<ServiceProvider> providerResult = this.buildServiceProvider();
+    public IServiceProvider buildServiceProviderOrThrow() throws BuildServiceCollectionException, GetValueOrThrowException, GetErrorOrThrowException {
+        Result<IServiceProvider> providerResult = this.buildServiceProvider();
         if (providerResult.isSuccess()) {
             return providerResult.getValueOrThrow();
         }

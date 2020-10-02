@@ -1,4 +1,4 @@
-package Callisto.DependencyInjection;
+package Callisto.DependencyInjection.Domain;
 
 /**
  * @author David Retzlaff

@@ -1,5 +1,8 @@
-package Callisto.DependencyInjection;
+package Callisto.DependencyInjection.Application;
 
+import Callisto.DependencyInjection.Domain.GetRequiredServiceOrThrowException;
+import Callisto.DependencyInjection.Domain.IServiceProvider;
+import Callisto.DependencyInjection.Domain.ServiceDescriptor;
 import Polaris.GetErrorOrThrowException;
 import Polaris.GetValueOrThrowException;
 import Polaris.Option;
@@ -19,7 +22,7 @@ import java.util.stream.Collectors;
  * Date: 25.09.2020, 22:13
  */
 
-public class ServiceProvider implements IServiceProvider{
+public class ServiceProvider implements IServiceProvider {
 
     private Hashtable<String, ServiceDescriptor> serviceDescriptors;
     private Hashtable<String, Object> singletonRepository;

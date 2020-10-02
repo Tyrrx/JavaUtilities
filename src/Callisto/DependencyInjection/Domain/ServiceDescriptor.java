@@ -1,4 +1,4 @@
-package Callisto.DependencyInjection;
+package Callisto.DependencyInjection.Domain;
 
 import Polaris.*;
 
