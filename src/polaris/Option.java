@@ -1,5 +1,6 @@
 package polaris;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -39,9 +40,7 @@ public abstract class Option<T> {
     }
 
     public <T1> Option<T1> bind(Function<T, Option<T1>> binder) {
-        return this.match(some -> {
-            return binder.apply(some);
-        }, () -> Option.none());
+        return this.match(binder, Option::none);
     }
 
     public <T1> Option<T1> map(Function<T, T1> mapper) {
@@ -49,9 +48,7 @@ public abstract class Option<T> {
     }
 
     public Result<T> toResult(Supplier<String> onNone) {
-        return this.match(some -> {
-            return Result.success(some);
-        }, () -> Result.failure(onNone.get()));
+        return this.match(Result::success, () -> Result.failure(onNone.get()));
     }
 
     public T getValueOrThrow() throws GetValueOrThrowException {
@@ -66,7 +63,7 @@ public abstract class Option<T> {
     }
 
     public static <T1> Option<T1> flatten(Option<Option<T1>> option) {
-        return option.match(some -> some, () -> Option.none());
+        return option.match(some -> some, Option::none);
     }
 
     public static <T1> Option<T1> some(T1 object) {
@@ -81,6 +78,10 @@ public abstract class Option<T> {
         return object != null
                 ? new Some<>(object)
                 : Option.none();
+    }
+
+    public static <T> Option<T> fromOptional(Optional<T> optional) {
+        return optional.map(Option::some).orElseGet(Option::none);
     }
 
     public boolean isSome() {

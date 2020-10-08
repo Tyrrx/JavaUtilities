@@ -28,7 +28,8 @@ public class ServiceCollection implements IServiceCollection {
 
     /**
      * Registers a service as singleton. The service will be initialized just once.
-     * @param serviceClass
+     * @param <TService> type of the service specified by the service class
+     * @param serviceClass class of the service
      * @return this ServiceCollection
      */
     public <TService> ServiceCollection addSingleton(Class<TService> serviceClass) {
@@ -38,7 +39,8 @@ public class ServiceCollection implements IServiceCollection {
 
     /**
      * Registers a service as transient. The service will be initialized on every resolve.
-     * @param serviceClass
+     * @param <TService> type of the service specified by the service class
+     * @param serviceClass class of the service
      * @return this ServiceCollection
      */
     public <TService> ServiceCollection addTransient(Class<TService> serviceClass) {
@@ -48,8 +50,11 @@ public class ServiceCollection implements IServiceCollection {
 
     /**
      * Registers a service as singleton and allows injecting the service via an abstract class or an interface. The service will be initialized just once.
-     * @param interfaceClass
-     * @param serviceClass
+     * @param <TInterface> type of the interface specified by the interface class
+     * @param <TService> type of the service specified by the service class
+     * @param interfaceClass class of the interface
+     * @param serviceClass class of the service
+     *
      * @return this ServiceCollection
      */
     public <TInterface, TService> ServiceCollection addSingleton(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
@@ -59,8 +64,10 @@ public class ServiceCollection implements IServiceCollection {
 
     /**
      * Registers a service as transient and allows injecting the service via an abstract class or an interface. The service will be initialized on every resolve.
-     * @param interfaceClass
-     * @param serviceClass
+     * @param <TInterface> type of the interface specified by the interface class
+     * @param <TService> type of the service specified by the service class
+     * @param interfaceClass class of the interface
+     * @param serviceClass class of the service
      * @return this ServiceCollection
      */
     public <TInterface, TService> ServiceCollection addTransient(Class<TInterface> interfaceClass, Class<TService> serviceClass) {
